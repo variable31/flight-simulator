@@ -2,6 +2,41 @@
 
 Confidence tags: [Certain] means verified from source code or git history. [Likely] means strong inference. [Guessing] means gap-filling.
 
+## 0. Project status (updated 2026-09-30)
+
+**Phase:** Keys-Only **v2.0.0 is released**. It is waiting on its first test on real hardware.
+
+| Item | Status |
+|---|---|
+| Rebuilt code | [variable31/Pi-XPlane-FMC-CDU-Keys-Only](https://github.com/variable31/Pi-XPlane-FMC-CDU-Keys-Only), `master` (PRs #1, #2 merged) |
+| Release | [v2.0.0](https://github.com/variable31/Pi-XPlane-FMC-CDU-Keys-Only/releases/tag/v2.0.0): armhf + arm64 `.deb`, built on Debian Bookworm (glibc 2.36) |
+| User guide | [README step-by-step guide](https://github.com/variable31/Pi-XPlane-FMC-CDU-Keys-Only#step-by-step-guide-start-here), written for a non-technical user (John) |
+| Target | X-Plane 12, Raspberry Pi 3 (also Pi 4/5), Raspberry Pi OS Bookworm or newer |
+| Full CDU (screen) | Not started. This repo is its home. |
+
+**Verified [Certain]:**
+- CI passes: unit tests (config parser, debounce and chords, UDP `CMND` bytes, `BECN` discovery) plus an end-to-end dry run.
+- Both release `.deb`s were downloaded from the public `releases/latest` links and inspected: correct architecture, needs glibc ≤ 2.36, and `keys.conf` is a conffile.
+- An x86 build of the same `v2.0.0` source was run through guide Part 2 (install) and the software side of Part 4 on a Linux container:
+  - `apt install` created the `gpio` group and the `flightsim` user.
+  - `--version` prints 2.0.0.
+  - The systemd unit passes `systemd-analyze verify`.
+  - `--dry-run` prints exactly the lines the guide shows.
+  - An edited `keys.conf` survives a reinstall.
+  - `apt remove` works cleanly.
+
+**Not yet verified (next steps, in order):**
+1. **Real Pi GPIO.** [Certain] The kernel GPIO code (`src/gpio_chardev.cpp`) has only been compiled; it has never run on hardware. Run guide Parts 2–4 on the owner's Pi 3 with the keypad wired. Also check the parts the container could not run: `raspi-config` (Part 3), the postinst service enable/start, and `systemctl stop`.
+2. **X-Plane 12 end to end** (Part 5). [Likely] The default 737-800 responds to the `sim/FMS/*` commands in the default keymap, but this has not been confirmed. If the log shows `sent ...` and the sim doesn't react, fix the commands in `keys.conf`; the code does not need to change.
+3. **Install at John's.** Only after steps 1 and 2 pass. Ask him for `journalctl -u flight-simulator-keys -n 50` if anything fails.
+
+**Decisions made** (resolving §6 below):
+- Pi 3 first.
+- Keys-Only before the full CDU.
+- A generic INI keymap (`/etc/flight-simulator/keys.conf`) rather than YAML, so there are zero dependencies.
+- The Linux GPIO chardev uAPI v2 instead of libgpiod, because Bookworm and Trixie ship incompatible libgpiod APIs while the kernel ABI is stable.
+- Releases are published from the GitHub web UI. The build session can push branches but not tags, so the release job accepts an existing release.
+
 ## 1. What this is
 - **Author:** Shahada Abubakar (GitHub `dotsha747`), Malaysia.
   - Blog: blog.shahada.abubakar.net/tag/737fmccdu
@@ -67,7 +102,7 @@ The code didn't stop working. What died is the distribution channel.
 - Ship the source (or an offer of source) alongside any binaries.
 - Mark modified files.
 
-## 6. Open decisions for the rebuild phase
+## 6. Open decisions for the rebuild phase (resolved; see §0)
 - Hardware target: Pi 4 or Pi 5, and 32- or 64-bit OS?
 - Keep the 9×8 matrix and PCB as-is, or support a generic "N buttons → M commands" config file? A YAML key map would make it usable for any button box, not just an FMC.
 - Keys-Only first (a weekend) or the full CDU (weeks)?
