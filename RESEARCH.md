@@ -48,11 +48,27 @@ Confidence tags: [Certain] means verified from source code or git history. [Like
 - The CDU fills the screen. The Keep Aspect Ratio setting moved with the Pi, so no mouse step was needed.
 
 ### Maintenance (recommended, not blockers)
-1. **Back up the memory card** while everything works, because the card is the most likely part to fail.
-   - Back up: Pi `sudo poweroff`, then card into the Lenovo, then **Win32 Disk Imager**, then **Read** to an `.img` file. Cancel any "format" prompt.
-   - Restore: Raspberry Pi Imager, then **Use custom**, then that `.img`, written to a new card.
+1. **Memory card backup: deferred by the owner's decision (2026-10-01).** Accepted risk: if the card fails, the sim is down until the Pi is rebuilt (about 1–2 h, see "Rebuild from scratch" below). [Likely] The card is the part most likely to fail.
+   - To lower the risk without a backup:
+     - **Shut down properly** (`sudo poweroff`, or via Pi Connect) rather than pulling power. [Guessing] Sudden power loss is the most common cause of card corruption.
+     - Keep a **spare card of 16 GB or more** with the owner.
+   - If a backup is done later: Pi `sudo poweroff`, then card into the Lenovo, then **Win32 Disk Imager**, then **Read** to an `.img` file. Restore with Raspberry Pi Imager, then **Use custom**.
 2. ~~Raspberry Pi Connect~~ **Done (2026-10-01).** The remote shell works from outside John's network. Screen sharing isn't available because the Pi has no desktop; the shell covers every fix used so far.
 3. **Updates:** merge first, publish the release, then run the same `wget` + `sudo apt install ./keys.deb ./display.deb` on the Pi.
+
+### Rebuild from scratch (if the card fails)
+1. **New card:** Raspberry Pi Imager, Raspberry Pi 3, Raspberry Pi OS (64-bit).
+   - Under Edit settings: hostname `fmc`, user `jobolami`, John's Wi-Fi, and **Services > Enable SSH** (password).
+   - Answer **Yes** to applying the settings.
+2. **SSH in:** `ssh jobolami@fmc.local`, then check that the prompt reads `jobolami@fmc:~ $`.
+3. **Buttons:** follow README **Part 2** (install `flight-simulator-keys` from `releases/latest`) and **Part 3** (free the pins). Optionally run the Part 4 dry run.
+4. **Screen:** follow README **Part 6, steps 8–10**:
+   - Turn off the desktop with `sudo systemctl set-default multi-user.target && sudo reboot`.
+   - Install `flight-simulator-display`.
+   - The X-Plane PC needs no changes.
+5. **Fill the screen:** with a USB mouse on the Pi, open WebFMC settings (gear) and turn **Keep Aspect Ratio** off.
+6. **Remote help:** run `loginctl enable-linger`, `rpi-connect on`, then `rpi-connect signin`, all **without sudo**. If `rpi-connect` is missing, install `rpi-connect-lite` first.
+7. **Check:** with X-Plane + Zibo running, the screen goes WAITING → CDU, and LEGS changes the page.
 
 ### Lessons learned on hardware (now in the guide)
 - **Imager:** without **Services > Enable SSH**, `ssh` says "Connection refused". The fix is an empty `ssh` file on the boot partition. The hostname comes from Imager (`fmc`), so use `fmc.local`.
