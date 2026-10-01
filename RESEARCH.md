@@ -13,6 +13,7 @@ Confidence tags: [Certain] means verified from source code or git history. [Like
 | User guide | [README step-by-step guide](https://github.com/variable31/Pi-XPlane-FMC-CDU-Keys-Only#step-by-step-guide-start-here), Parts 1–6, written for John |
 | Target | X-Plane 12 + **Zibo 737-800** (captain's CDU), Raspberry Pi 3 on Raspberry Pi OS (Trixie, arm64, booting to console) |
 | Deployment | **John's house**, X-Plane 12 + Zibo 737-800, live since 2026-10-01 |
+| Remote help | **Raspberry Pi Connect** (remote shell at connect.raspberrypi.com), working; signed in to the owner's Raspberry Pi ID with John's consent |
 | CDU screen | Shown via the **WebFMC (free)** X-Plane plugin plus a Chromium kiosk on the Pi's HDMI→VGA screen |
 
 ### Releases
@@ -50,7 +51,7 @@ Confidence tags: [Certain] means verified from source code or git history. [Like
 1. **Back up the memory card** while everything works, because the card is the most likely part to fail.
    - Back up: Pi `sudo poweroff`, then card into the Lenovo, then **Win32 Disk Imager**, then **Read** to an `.img` file. Cancel any "format" prompt.
    - Restore: Raspberry Pi Imager, then **Use custom**, then that `.img`, written to a new card.
-2. **Raspberry Pi Connect** (optional, with John's consent) for remote help without a visit.
+2. ~~Raspberry Pi Connect~~ **Done (2026-10-01).** The remote shell works from outside John's network. Screen sharing isn't available because the Pi has no desktop; the shell covers every fix used so far.
 3. **Updates:** merge first, publish the release, then run the same `wget` + `sudo apt install ./keys.deb ./display.deb` on the Pi.
 
 ### Lessons learned on hardware (now in the guide)
@@ -61,6 +62,9 @@ Confidence tags: [Certain] means verified from source code or git history. [Like
 - **The screen program logs under `journalctl -t display-launch`, not `-u`,** because the logind session moves it out of the unit's cgroup.
 - **WebFMC's options go in the address after `#`** (`#screen=1,side=0`), which our config parser read as a comment, so the launcher now adds them itself.
 - **Sticky switches** show up as `Multiple keys pressed`, or as a whole column of keys going dead. Fix them in hardware, then re-run the 69-key dry run. The software deliberately doesn't work around them.
+- **Raspberry Pi Connect:**
+  - Run `rpi-connect` commands **without `sudo`**. Run as root they fail with "no D-Bus session bus".
+  - Run `loginctl enable-linger` first, so Connect keeps running with nobody logged in.
 - **Merge before you publish a release.** A release published before its PR was merged pointed at old code. CI's version guard refused to build it, but the empty release still became "latest" until it was deleted and republished.
 
 ### Known small follow-ups (no release on their own)
