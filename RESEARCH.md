@@ -4,12 +4,12 @@ Confidence tags: [Certain] means verified from source code or git history. [Like
 
 ## 0. Project status (updated 2026-10-01)
 
-**Phase:** Keys-Only **v2.1.1 is released**, with an optional CDU screen package. It is proven on the owner's Pi 3 up to "X-Plane found". **Blocker:** the CDU screen still waits for WebFMC on the X-Plane PC.
+**Phase:** **v2.2.0 is released and working end to end** on the owner's Pi 3: the panel's buttons drive the Zibo in X-Plane 12, and the Pi's own screen shows the live CDU (screen only, filling the display). **Remaining:** the sticky switches, then John's install.
 
 | Item | Status |
 |---|---|
-| Code | [variable31/Pi-XPlane-FMC-CDU-Keys-Only](https://github.com/variable31/Pi-XPlane-FMC-CDU-Keys-Only), `master` (PRs #1–#7 merged) |
-| Latest release | [v2.1.1](https://github.com/variable31/Pi-XPlane-FMC-CDU-Keys-Only/releases/tag/v2.1.1): `flight-simulator-keys` (armhf/arm64) plus `flight-simulator-display` (all) |
+| Code | [variable31/Pi-XPlane-FMC-CDU-Keys-Only](https://github.com/variable31/Pi-XPlane-FMC-CDU-Keys-Only), `master` (PRs #1–#9 merged) |
+| Latest release | [v2.2.0](https://github.com/variable31/Pi-XPlane-FMC-CDU-Keys-Only/releases/tag/v2.2.0): `flight-simulator-keys` (armhf/arm64) plus `flight-simulator-display` (all) |
 | User guide | [README step-by-step guide](https://github.com/variable31/Pi-XPlane-FMC-CDU-Keys-Only#step-by-step-guide-start-here), Parts 1–6, written for John |
 | Target | X-Plane 12 + **Zibo 737-800** (captain's CDU), Raspberry Pi 3 on Raspberry Pi OS (Trixie, arm64, booting to console) |
 | CDU screen | Shown via the **WebFMC (free)** X-Plane plugin plus a Chromium kiosk on the Pi's HDMI→VGA screen |
@@ -22,9 +22,10 @@ Confidence tags: [Certain] means verified from source code or git history. [Like
 | 2.0.2 | **Zibo keymap is the default** (`laminar/B738/button/fmc1_*`, from the original author's `ZiboFMC.cpp`). The default-737 keymap ships as `keys-xplane-default.conf`. |
 | 2.1.0 | Optional `flight-simulator-display` package: WAITING screen, then the WebFMC CDU in a kiosk, with automatic switch-over. The keys program publishes the X-Plane IP to `/run/flight-simulator/xplane-host`. |
 | 2.1.1 | Detects the Pi desktop blocking the screen and prints the fix. The guide adds a "turn off the desktop" step. The log command becomes `journalctl -t display-launch`. |
+| 2.2.0 | The Pi's screen shows **only the CDU screen**, without WebFMC's on-screen keys: the launcher opens WebFMC with `#screen=1,side=0`. New `display.conf` settings `screen_only`, `side`, `extra`. Guide: detailed X-Plane PC setup (Part 6 steps 1–7) and "Keep Aspect Ratio off" to fill the screen. |
 
 ### Proven on real hardware [Certain] (owner's Pi 3, from logs the owner pasted)
-- **Install and upgrade** from the public release links, 2.0.0 → 2.1.1. Conffiles are kept, and the Zibo keymap replaced the unedited old one silently.
+- **Install and upgrade** from the public release links, 2.0.0 → 2.2.0. Conffiles are kept, and the Zibo keymap replaced the unedited old one silently.
 - **GPIO keypad:** 66/69 keys sent the correct command on the first pass. LEGS/PREV/SP failed because of **sticky switches** (PROG sticking down blocks its column), which is a hardware fix. PREV and SP worked on a retest.
 - **CPU fix:** confirmed necessary on the Pi (13.3 s of CPU per 96 s before the fix).
 - **Services** start at boot. The keys service runs as the unprivileged `flightsim` user.
@@ -34,16 +35,16 @@ Confidence tags: [Certain] means verified from source code or git history. [Like
   - The Chromium `EGL ES 3.0` errors are harmless; the Pi 3 is GLES2-only and Chromium falls back.
 - **Wi-Fi only**, Ethernet unplugged and Pi rebooted: it joins Wi-Fi, both services are active, the screen shows WAITING, and `ssh jobolami@fmc.local` works.
 - **X-Plane found over Wi-Fi:** `found X-Plane "DESKTOP-U7CR3AR" at 10.0.0.87:49000`, so the beacon reaches the Pi through the router, and the host file holds `10.0.0.87`.
+- **WebFMC (free) on X-Plane 12:** the phone test works, at both `http://10.0.0.87:9090` and `.../#screen=1,side=0` (screen only).
+- **The Pi screen switches from WAITING to the live CDU** by itself, and with 2.2.0 shows the **screen only, no keys**.
+- **The Zibo reacts to the panel:** LEGS changes the page on the Pi's screen and in X-Plane, which confirms the `laminar/B738/button/fmc1_*` names on the current Zibo.
+- **Full-screen CDU:** after turning WebFMC's **Keep Aspect Ratio** off once, with a USB mouse on the Pi, the CDU fills the 1024x768 screen.
 
 ### Not yet verified (next steps, in order)
-1. **WebFMC reachable from the Pi:**
-   - On the X-Plane PC: WebFMC (free) for XP12 installed and listed in the Plugins menu, firewall Allow on Private.
-   - The phone test: `http://10.0.0.87:9090` shows the CDU.
-   - Then the Pi screen switches from WAITING to the CDU. Not seen yet.
-2. **The Zibo reacts to the panel:** pressing LEGS logs `sent laminar/B738/button/fmc1_legs` and the sim's CDU changes. [Likely] Current Zibo builds keep these command names; unconfirmed.
-3. **Hardware:** clean or replace the sticky switches (PROG first, then A, H, E, L), then re-run the 69-key dry run, including LEGS.
-4. **John's install:**
-   - Same steps, on a Pi booting to console.
+1. **Keep Aspect Ratio survives a reboot.** [Likely] It does, because the kiosk's Chromium profile lives in the service's StateDirectory; confirm with one `sudo reboot`.
+2. **Hardware:** clean or replace the sticky switches (PROG first, then A, H, E, L), then re-run the 69-key dry run, including LEGS.
+3. **John's install:**
+   - README Part 6 steps 1–7 on his X-Plane PC (same home network as the Pi); the Pi is already set up.
    - Optionally enable Raspberry Pi Connect, with his consent, for remote help.
 
 ### Lessons learned on hardware (now in the guide)
@@ -52,6 +53,7 @@ Confidence tags: [Certain] means verified from source code or git history. [Like
 - **The apt "Download is performed unsandboxed as root" notice is harmless.**
 - **The Raspberry Pi desktop holds the screen,** so the kiosk can't start (`Failed to start a DRM session`). Boot to console with `systemctl set-default multi-user.target`.
 - **The screen program logs under `journalctl -t display-launch`, not `-u`,** because the logind session moves it out of the unit's cgroup.
+- **WebFMC's options go in the address after `#`** (`#screen=1,side=0`), which our config parser read as a comment, so the launcher now adds them itself.
 - **Merge before you publish a release.** A release published before its PR was merged pointed at old code. CI's version guard refused to build it, but the empty release still became "latest" until it was deleted and republished.
 
 ### Known small follow-ups (no release on their own)
@@ -65,6 +67,7 @@ Confidence tags: [Certain] means verified from source code or git history. [Like
 - The Linux GPIO chardev uAPI v2 instead of libgpiod, because Bookworm and Trixie ship incompatible libgpiod APIs.
 - **The Zibo 737 (captain CDU) is the default keymap**, because John flies the Zibo.
 - **Two-key chords stay rejected,** with no rollover (the owner's choice). Sticky keys are fixed in hardware.
+- **The Pi shows the CDU screen only** (WebFMC screen-only mode, captain's side), because the panel has real buttons.
 - **CDU screen via WebFMC (free) plus a Pi kiosk,** instead of our own renderer. Chosen for the least maintenance: the vendor tracks Zibo/X-Plane changes, and the X-Plane 12 Web API is localhost-only anyway. Accepted risk: a closed-source plugin, but the keys never depend on it.
 - Releases are published from the GitHub web UI **after** merging. The build session can't push tags, and the release job accepts an existing release.
 
