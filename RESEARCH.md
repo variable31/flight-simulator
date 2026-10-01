@@ -38,14 +38,14 @@ Confidence tags: [Certain] means verified from source code or git history. [Like
 - **WebFMC (free) on X-Plane 12:** the phone test works, at both `http://10.0.0.87:9090` and `.../#screen=1,side=0` (screen only).
 - **The Pi screen switches from WAITING to the live CDU** by itself, and with 2.2.0 shows the **screen only, no keys**.
 - **The Zibo reacts to the panel:** LEGS changes the page on the Pi's screen and in X-Plane, which confirms the `laminar/B738/button/fmc1_*` names on the current Zibo.
-- **Full-screen CDU:** after turning WebFMC's **Keep Aspect Ratio** off once, with a USB mouse on the Pi, the CDU fills the 1024x768 screen.
+- **Full-screen CDU:** after turning WebFMC's **Keep Aspect Ratio** off once, with a USB mouse on the Pi, the CDU fills the 1024x768 screen, and **stays that way after a reboot** (the setting lives in the kiosk's Chromium profile on the Pi).
 
 ### Not yet verified (next steps, in order)
-1. **Keep Aspect Ratio survives a reboot.** [Likely] It does, because the kiosk's Chromium profile lives in the service's StateDirectory; confirm with one `sudo reboot`.
-2. **Hardware:** clean or replace the sticky switches (PROG first, then A, H, E, L), then re-run the 69-key dry run, including LEGS.
+1. **Hardware (the only blocker):** clean or replace the sticky switches (PROG first, then A, H, E, L), then re-run the 69-key dry run, including LEGS.
+2. **Raspberry Pi Connect** (optional, with John's consent) before the Pi leaves the owner, for remote help.
 3. **John's install:**
    - README Part 6 steps 1–7 on his X-Plane PC (same home network as the Pi); the Pi is already set up.
-   - Optionally enable Raspberry Pi Connect, with his consent, for remote help.
+   - Move the Pi, check WAITING → CDU and LEGS. Redo Keep Aspect Ratio only if his screen shows bars.
 
 ### Lessons learned on hardware (now in the guide)
 - **Imager:** without **Services > Enable SSH**, `ssh` says "Connection refused". The fix is an empty `ssh` file on the boot partition. The hostname comes from Imager (`fmc`), so use `fmc.local`.
@@ -57,7 +57,8 @@ Confidence tags: [Certain] means verified from source code or git history. [Like
 - **Merge before you publish a release.** A release published before its PR was merged pointed at old code. CI's version guard refused to build it, but the empty release still became "latest" until it was deleted and republished.
 
 ### Known small follow-ups (no release on their own)
-- On reinstall, postinst prints `warn: already a member of video/render/input`. Cosmetic; silence it in the next release.
+- On reinstall, postinst prints `warn: already a member of video/render/input`. Cosmetic. **Skipped by the owner's decision (2026-10-01).**
+- Setting Keep Aspect Ratio automatically, so no mouse is ever needed. **Skipped by the owner's decision (2026-10-01).** It's only needed again if the Pi's memory card or screen-program data is wiped. Do it only if WebFMC turns out to accept it as a URL option (like `screen=1`). Never write into the browser's stored data, because that depends on WebFMC internals.
 - The display .deb uses zstd compression (built on Ubuntu). It works on Trixie; switch to `-Zxz` if any older dpkg complains.
 - [Likely] If the Pi's network changes while running (Ethernet ↔ Wi-Fi), the beacon listener may stay on the old interface until the service restarts. Verified fine after a reboot; not tested live.
 
