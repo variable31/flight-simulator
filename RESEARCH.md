@@ -4,7 +4,7 @@ Confidence tags: [Certain] means verified from source code or git history. [Like
 
 ## 0. Project status (updated 2026-10-01)
 
-**Phase:** **v2.2.0 is released and working end to end** on the owner's Pi 3: the panel's buttons drive the Zibo in X-Plane 12, and the Pi's own screen shows the live CDU (screen only, filling the display). **Remaining:** the sticky switches, then John's install.
+**Phase:** **LIVE at John's house** (v2.2.0). The panel's 69 buttons drive the Zibo in X-Plane 12, and the Pi's own screen shows the live CDU (screen only, filling the display). Everything is proven on the real hardware. What's left is maintenance only.
 
 | Item | Status |
 |---|---|
@@ -12,6 +12,7 @@ Confidence tags: [Certain] means verified from source code or git history. [Like
 | Latest release | [v2.2.0](https://github.com/variable31/Pi-XPlane-FMC-CDU-Keys-Only/releases/tag/v2.2.0): `flight-simulator-keys` (armhf/arm64) plus `flight-simulator-display` (all) |
 | User guide | [README step-by-step guide](https://github.com/variable31/Pi-XPlane-FMC-CDU-Keys-Only#step-by-step-guide-start-here), Parts 1–6, written for John |
 | Target | X-Plane 12 + **Zibo 737-800** (captain's CDU), Raspberry Pi 3 on Raspberry Pi OS (Trixie, arm64, booting to console) |
+| Deployment | **John's house**, X-Plane 12 + Zibo 737-800, live since 2026-10-01 |
 | CDU screen | Shown via the **WebFMC (free)** X-Plane plugin plus a Chromium kiosk on the Pi's HDMI→VGA screen |
 
 ### Releases
@@ -26,7 +27,7 @@ Confidence tags: [Certain] means verified from source code or git history. [Like
 
 ### Proven on real hardware [Certain] (owner's Pi 3, from logs the owner pasted)
 - **Install and upgrade** from the public release links, 2.0.0 → 2.2.0. Conffiles are kept, and the Zibo keymap replaced the unedited old one silently.
-- **GPIO keypad:** 66/69 keys sent the correct command on the first pass. LEGS/PREV/SP failed because of **sticky switches** (PROG sticking down blocks its column), which is a hardware fix. PREV and SP worked on a retest.
+- **GPIO keypad: 69/69 keys** send the correct command after the sticky switches were fixed (owner's retest, 2026-10-01). History: the first pass got 66/69, because LEGS, PREV and SP were blocked by **sticky switches** (PROG sticking down blocks its column).
 - **CPU fix:** confirmed necessary on the Pi (13.3 s of CPU per 96 s before the fix).
 - **Services** start at boot. The keys service runs as the unprivileged `flightsim` user.
 - **CDU screen:**
@@ -40,12 +41,17 @@ Confidence tags: [Certain] means verified from source code or git history. [Like
 - **The Zibo reacts to the panel:** LEGS changes the page on the Pi's screen and in X-Plane, which confirms the `laminar/B738/button/fmc1_*` names on the current Zibo.
 - **Full-screen CDU:** after turning WebFMC's **Keep Aspect Ratio** off once, with a USB mouse on the Pi, the CDU fills the 1024x768 screen, and **stays that way after a reboot** (the setting lives in the kiosk's Chromium profile on the Pi).
 
-### Not yet verified (next steps, in order)
-1. **Hardware (the only blocker):** clean or replace the sticky switches (PROG first, then A, H, E, L), then re-run the 69-key dry run, including LEGS.
-2. **Raspberry Pi Connect** (optional, with John's consent) before the Pi leaves the owner, for remote help.
-3. **John's install:**
-   - README Part 6 steps 1–7 on his X-Plane PC (same home network as the Pi); the Pi is already set up.
-   - Move the Pi, check WAITING → CDU and LEGS. Redo Keep Aspect Ratio only if his screen shows bars.
+### Installed at John's [Certain] (owner's report, 2026-10-01)
+- The Pi found X-Plane on John's network by itself, with no address to configure.
+- The screen goes from WAITING → live CDU. LEGS works on the panel, and the page changes on the Pi and in X-Plane.
+- The CDU fills the screen. The Keep Aspect Ratio setting moved with the Pi, so no mouse step was needed.
+
+### Maintenance (recommended, not blockers)
+1. **Back up the memory card** while everything works, because the card is the most likely part to fail.
+   - Back up: Pi `sudo poweroff`, then card into the Lenovo, then **Win32 Disk Imager**, then **Read** to an `.img` file. Cancel any "format" prompt.
+   - Restore: Raspberry Pi Imager, then **Use custom**, then that `.img`, written to a new card.
+2. **Raspberry Pi Connect** (optional, with John's consent) for remote help without a visit.
+3. **Updates:** merge first, publish the release, then run the same `wget` + `sudo apt install ./keys.deb ./display.deb` on the Pi.
 
 ### Lessons learned on hardware (now in the guide)
 - **Imager:** without **Services > Enable SSH**, `ssh` says "Connection refused". The fix is an empty `ssh` file on the boot partition. The hostname comes from Imager (`fmc`), so use `fmc.local`.
@@ -54,6 +60,7 @@ Confidence tags: [Certain] means verified from source code or git history. [Like
 - **The Raspberry Pi desktop holds the screen,** so the kiosk can't start (`Failed to start a DRM session`). Boot to console with `systemctl set-default multi-user.target`.
 - **The screen program logs under `journalctl -t display-launch`, not `-u`,** because the logind session moves it out of the unit's cgroup.
 - **WebFMC's options go in the address after `#`** (`#screen=1,side=0`), which our config parser read as a comment, so the launcher now adds them itself.
+- **Sticky switches** show up as `Multiple keys pressed`, or as a whole column of keys going dead. Fix them in hardware, then re-run the 69-key dry run. The software deliberately doesn't work around them.
 - **Merge before you publish a release.** A release published before its PR was merged pointed at old code. CI's version guard refused to build it, but the empty release still became "latest" until it was deleted and republished.
 
 ### Known small follow-ups (no release on their own)
